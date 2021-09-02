@@ -1,0 +1,8 @@
+add	$i0, 10, $i0
+sub	$i0, 45, $i1
+
+addf	$f0, .5, $f0
+subf	$f0, .1, $f1
+addv	$v0, $f0, $v0
+mulf	$f0, 2., $f0
+subv	$v0, $f0, $v1

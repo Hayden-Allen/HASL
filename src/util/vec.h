@@ -1,5 +1,7 @@
 #pragma once
 #include "pch.h"
+#include "core.h"
+#include "functions.h"
 
 namespace hasl
 {
@@ -9,9 +11,9 @@ namespace hasl
 		T x, y;
 
 
-		vec() : x(CAST(T, 0)), y(CAST(T, 0)) {}
+		vec() : x(HASL_CAST(T, 0)), y(HASL_CAST(T, 0)) {}
 		template<typename U>
-		vec(const U& u) : x(CAST(T, u)), y(CAST(T, u)) {}
+		vec(const U& u) : x(HASL_CAST(T, u)), y(HASL_CAST(T, u)) {}
 		vec(const T& _x, const T& _y) : x(_x), y(_y) {}
 		// copy constructor
 		vec(const vec<T>& other)
@@ -32,12 +34,12 @@ namespace hasl
 		// short circuit if x != other.x
 		bool operator==(const vec<T>& other) const
 		{
-			return isZero(x - other.x) && isZero(y - other.y);
+			return x == other.x && y == other.y;
 		}
 		// short circuit if x == other.x
 		bool operator!=(const vec<T>& other) const
 		{
-			return !isZero(x - other.x) || !isZero(y - other.y);
+			return x != other.x || y != other.y;
 		}
 		// copy values from other into this
 		vec<T>& operator=(const vec<T>& other)
@@ -147,55 +149,51 @@ namespace hasl
 			return *this;
 		}
 		// the length of this vector
-		T Magnitude() const
+		T magnitude() const
 		{
-			return dist(0.f, 0.f, x, y);
+			return HASL_CAST(T, std::sqrt(x * x + y * y));
 		}
 		// return a new vector that is this vector normalized
-		vec<T> Normalized() const
+		vec<T> normalized() const
 		{
-			return operator/(Magnitude());
+			return operator/(magnitude());
 		}
 		// normalize this vector and return it
-		vec<T>& Normalize()
+		vec<T>& normalize()
 		{
-			return operator/=(Magnitude());
+			return operator/=(magnitude());
 		}
 		// dot product of this vector and other
-		T Dot(const vec<T>& other) const
+		T dot(const vec<T>& other) const
 		{
 			return x * other.x + y * other.y;
 		}
 		// the angle (relative to the x-axis) of this vector
-		T Angle() const
+		T angle() const
 		{
-			return atan(x, y);
+			return std::atan2(y, x);
 		}
 		// the angle between this vector and other
-		T AngleBetween(const vec<T>& other) const
+		T angle_between(const vec<T>& other) const
 		{
-			return acos(Dot(other) / (Magnitude() * other.Magnitude()));
+			return std::acos(dot(other) / (magnitude() * other.magnitude()));
 		}
-		vec<T>& Clamp(const T& lo, const T& hi)
+		vec<T>& clamp(const T& lo, const T& hi)
 		{
-			const T mag = Magnitude();
+			const T mag = magnitude();
 			if (mag < lo)
-				return Normalize() *= lo;
+				return normalize() *= lo;
 			if (mag > hi)
-				return Normalize() *= hi;
+				return normalize() *= hi;
 			return *this;
 		}
-		vec<T> Unit() const
+		vec<T> unit() const
 		{
-			return { CAST(T, sign(x)), CAST(T, sign(y)) };
+			return { HASL_CAST(T, sign(x)), HASL_CAST(T, sign(y)) };
 		}
-		vec<T> Abs() const
+		vec<T> abs() const
 		{
-			return { abs(x), abs(y) };
-		}
-		bool IsZero() const
-		{
-			return isZero(x) && isZero(y);
+			return { std::abs(x), std::abs(y) };
 		}
 	};
 

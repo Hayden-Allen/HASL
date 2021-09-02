@@ -56,7 +56,7 @@ namespace hasl::sasm
 
 		uint8_t opcode;
 		// immediate values
-		i_t ii1 = 0, ii2 = 0;
-		f_t if1 = 0.f;
+		i_t ii[2] = { 0 };
+		f_t fi = 0.f;
 	};
 }

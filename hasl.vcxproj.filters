@@ -21,18 +21,9 @@
     <ClCompile Include="pch.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="src\sasm\vm.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\sasm\script.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="src\sasm\assembler.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="s.h">
+    <ClInclude Include="hasl.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\sasm\command.h">
@@ -62,11 +53,14 @@
     <ClInclude Include="src\sasm\assembler.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="src\util\string.h">
+    <ClInclude Include="src\util\functions.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="src\constants.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\test.sasm" />
   </ItemGroup>
 </Project>

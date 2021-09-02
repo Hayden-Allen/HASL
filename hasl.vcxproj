@@ -171,12 +171,9 @@
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="src\sasm\assembler.cpp" />
-    <ClCompile Include="src\sasm\script.cpp" />
-    <ClCompile Include="src\sasm\vm.cpp" />
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="s.h" />
+    <ClInclude Include="hasl.h" />
     <ClInclude Include="pch.h" />
     <ClInclude Include="src\constants.h" />
     <ClInclude Include="src\sasm\constants.h" />
@@ -186,8 +183,11 @@
     <ClInclude Include="src\sasm\registers.h" />
     <ClInclude Include="src\sasm\script.h" />
     <ClInclude Include="src\sasm\vm.h" />
-    <ClInclude Include="src\util\string.h" />
+    <ClInclude Include="src\util\functions.h" />
     <ClInclude Include="src\util\vec.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="res\test.sasm" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
