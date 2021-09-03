@@ -1,8 +1,17 @@
-add	$i0, 10, $i0
-sub	$i0, 45, $i1
+mp:
+	dbgs	"NO"
+	end
 
-addf	$f0, .5, $f0
-subf	$f0, .1, $f1
-addv	$v0, $f0, $v0
-mulf	$f0, 2., $f0
-subv	$v0, $f0, $v1
+main:
+	imb	0, $i0
+	beqz	$i0, mp
+	dbgs	"YES"
+
+	mov	10, $i0
+loop:
+	beqz	$i0, loop_end
+	spn	"test-spawn", $obj
+	sub	$i0, 1, $i0
+	j	loop
+loop_end:
+	end

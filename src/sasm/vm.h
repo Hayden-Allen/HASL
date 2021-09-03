@@ -1,6 +1,8 @@
 #pragma once
 #include "pch.h"
 #include "script.h"
+#include "script_runtime.h"
+#include "scriptable.h"
 
 namespace hasl::sasm
 {
@@ -36,7 +38,7 @@ namespace hasl::sasm
 		}
 		HASL_DCM(vm);
 	public:
-		i_t run(script<STACK, RAM>& s, float time)
+		i_t run(script<STACK, RAM>& s, script_runtime& rt)
 		{
 			if (!s.m_assembled)
 			{
@@ -45,7 +47,7 @@ namespace hasl::sasm
 			}
 
 			// script is still sleeping
-			if (time < s.m_sleep_end)
+			if (rt.current_time < s.m_sleep_end)
 				return 0;
 
 			// restart from entry point unless sleeping
@@ -55,16 +57,18 @@ namespace hasl::sasm
 			s.m_sleeping = false;
 			s.m_abort = false;
 			m_regs.i[c::reg_hst] = c::host_index;
-			// TODO
-			// m_reg.i[c::reg_oc] = 0;
+			m_regs.i[c::reg_oc] = rt.env.size();
 			m_regs.i[c::reg_flag] = 0;
 
 			while (!s.m_abort && m_pc < s.m_instructions.size())
 			{
 				const args& cur = s.m_instructions[m_pc];
-				(this->*(s_operations[cur.opcode]))(&s, cur, time, 0.f);
+				(this->*(s_operations[cur.opcode]))(&s, cur, rt.current_time, rt.delta_time, rt.host, rt.env);
 				m_pc++;
 			}
+
+			process_spawn_queue(rt);
+			m_spawn_queue.clear();
 
 			return m_regs.i[c::reg_flag];
 		}
@@ -101,7 +105,7 @@ namespace hasl::sasm
 			if(options.ram)
 				arrprint(m_memory, "%u", ", ", 16);
 		}
-	private:
+	protected:
 		// stack
 		i_t m_stack[STACK];
 		// RAM
@@ -110,6 +114,14 @@ namespace hasl::sasm
 		registers m_regs;
 		// program counter, stack pointer
 		size_t m_pc, m_sp;
+		std::vector<scriptable*> m_spawn_queue;
+	protected:
+		virtual scriptable* spawn(const char* s) = 0;
+		virtual void process_spawn_queue(script_runtime& rt) = 0;
+		virtual bool is_key_pressed(i_t key) const = 0;
+		virtual bool is_mouse_pressed(i_t button) const = 0;
+		virtual v_t get_mouse_pos() const = 0;
+		virtual v_t get_mouse_scroll() const = 0;
 	private:
 		i_t* const get_int_reg(size_t i)
 		{
@@ -158,7 +170,7 @@ namespace hasl::sasm
 	private:
 		// instruction signature
 #define I(name, code) \
-	void name(script<STACK, RAM>* const s, const args& a, float ct, float dt) { code }
+	void name(script<STACK, RAM>* const s, const args& a, float ct, float dt, scriptable* const host, std::vector<scriptable*>& env) { code }
 		// register's value if it exists, OR something else
 #define R(r, o) ((r) ? (*r) : (o))
 
@@ -462,63 +474,66 @@ namespace hasl::sasm
 		I(dbgs,
 			printf("[HASL@%s]: %s\n", s->m_filepath.c_str(), (char*)(m_memory + R(a.i[0], a.ii[0])));
 		);
-//		// engine
-//		I(gettime,
-//			*a.f[0] = current;
-//		);
-//		// engine.input
-//		I(imp,
-//			*a.v[0] = world->m_Engine->GetCursorPos();
-//		);
-//		I(ims,
-//			*a.v[0] = world->m_Engine->GetScroll();
-//		);
-//		I(imb,
-//			*a.i[1] = HASL_CAST(i_t, world->m_Engine->IsMousePressed(HASL_CAST(size_t, R(a.i[0], a.ii[0]))));
-//		);
-//		I(ikp,
-//			*a.i[1] = HASL_CAST(i_t, world->m_Engine->IsKeyPressed(HASL_CAST(size_t, R(a.i[0], a.ii[0]))));
-//		);
-//		I(ikd,
-//			const i_t a = HASL_CAST(i_t, world->m_Engine->IsKeyPressed(HASL_CAST(size_t, R(a.i[0], a.ii[0]))));
-//			const i_t b = HASL_CAST(i_t, world->m_Engine->IsKeyPressed(HASL_CAST(size_t, R(a.i[1], a.ii[1]))));
-//			*a.i[2] = a - b;
-//		);
-//		// engine.obj
-//#define CS (m_Registers.i[Registers::s_RegObj] == s_HostIndex ? host : env[m_Registers.i[Registers::s_RegObj]])
-//		I(ogp,
-//			*a.v[0] = CS->GetPos();
-//		);
-//		I(osp,
-//			CS->SetPos(*a.v[0]);
-//		);
-//		I(ogv,
-//			*a.v[0] = CS->GetVel();
-//		);
-//		I(osv,
-//			CS->SetVel(*a.v[0]);
-//		);
-//		I(ogd,
-//			*a.v[0] = CS->GetDims();
-//		);
-//		I(ogs,
-//			*a.f[0] = CS->GetSpeed();
-//		);
-//		I(oss,
-//			CS->SetState((char*)(m_memory + R(a.i[0], a.ii[0])));
-//		);
-//		I(spn,
-//			Dynamic * d = world->CreateDynamic((char*)(m_memory + R(a.i[0], a.ii[0])), false);
-//			env.push_back((Scriptable*)d);
-//			m_Registers.i[Registers::s_RegObjCount]++;
-//			m_SpawnQueue.push_back(d);
-//			*a.i[1] = env.size() - 1;
-//		);
+		// engine
+		I(gettime,
+			*a.f[0] = ct;
+		);
+		// engine.input
+		I(imp,
+			*a.v[0] = get_mouse_pos();
+		);
+		I(ims,
+			*a.v[0] = get_mouse_scroll();
+		);
+		I(imb,
+			*a.i[1] = HASL_CAST(i_t, is_mouse_pressed(R(a.i[0], a.ii[0])));
+		);
+		I(ikp,
+			*a.i[1] = HASL_CAST(i_t, is_key_pressed(R(a.i[0], a.ii[0])));
+		);
+		I(ikd,
+			const i_t x = HASL_CAST(i_t, is_key_pressed(R(a.i[0], a.ii[0])));
+			const i_t y = HASL_CAST(i_t, is_key_pressed(R(a.i[1], a.ii[1])));
+			*a.i[2] = x - y;
+		);
+		// engine.obj
+#define CS (m_regs.i[c::reg_obj] == c::host_index ? host : env[m_regs.i[c::reg_obj]])
+		I(ogp,
+			*a.v[0] = CS->get_pos();
+		);
+		I(osp,
+			CS->set_pos(*a.v[0]);
+		);
+		I(ogv,
+			*a.v[0] = CS->get_vel();
+		);
+		I(osv,
+			CS->set_vel(*a.v[0]);
+		);
+		I(ogd,
+			*a.v[0] = CS->get_dims();
+		);
+		I(ogs,
+			*a.f[0] = CS->get_speed();
+		);
+		I(oss,
+			CS->set_state((char*)(m_memory + R(a.i[0], a.ii[0])));
+		);
+		I(spn,
+			scriptable* spawned = spawn((char*)(m_memory + R(a.i[0], a.ii[0])));
+			// add for processing at the end of the current execution
+			m_spawn_queue.push_back(spawned);
+			// increment current object count
+			m_regs.i[c::reg_oc]++;
+			// add to current environment
+			env.push_back(spawned);
+			*a.i[1] = env.size() - 1;
+		);
 
 #undef R
 #undef I
 	private:
-		typedef void(vm::* operation)(script<STACK, RAM>* const, const args&, float, float);
+		typedef void(vm::* operation)(script<STACK, RAM>* const, const args&, float, float, scriptable* const, std::vector<scriptable*>&);
 		static inline operation s_operations[c::max_op_count];
 		static inline std::unordered_map<size_t, std::string> s_command_names;
 		static inline std::unordered_map<std::string, command_description> s_command_descriptions;
@@ -612,24 +627,24 @@ namespace hasl::sasm
 			{ "dbg",	{ arg_type::I_MI }, &vm::dbg },
 			{ "dbgf",	{ arg_type::F_MF }, &vm::dbgf },
 			{ "dbgv",	{ arg_type::V }, &vm::dbgv },
-			{ "dbgs",	{ arg_type::I_MI_MS }, &vm::dbgs }
-			//// engine
-			//{ "time",	{ arg_type::F }, &vm::gettime },
-			//// engine.input
-			//{ "imp",	{ arg_type::V }, &vm::imp },
-			//{ "ims",	{ arg_type::V }, &vm::ims },
-			//{ "imb",	{ arg_type::I_MI, arg_type::I }, &vm::imb },
-			//{ "ikp",	{ arg_type::I_MI, arg_type::I }, &vm::ikp },
-			//{ "ikd",	{ arg_type::I_MI, arg_type::I_MI, arg_type::I }, &vm::ikd },
-			//// engine.obj
-			//{ "ogp",	{ arg_type::V }, &vm::ogp },
-			//{ "osp",	{ arg_type::V }, &vm::osp },
-			//{ "ogv",	{ arg_type::V }, &vm::ogv },
-			//{ "osv",	{ arg_type::V }, &vm::osv },
-			//{ "ogd",	{ arg_type::V }, &vm::ogd },
-			//{ "ogs",	{ arg_type::F }, &vm::ogs },
-			//{ "oss",	{ arg_type::I_MI_MS }, &vm::oss },
-			//{ "spn",	{ arg_type::I_MI_MS, arg_type::I }, &vm::spn }
+			{ "dbgs",	{ arg_type::I_MI_MS }, &vm::dbgs },
+			// engine
+			{ "time",	{ arg_type::F }, &vm::gettime },
+			// engine.input
+			{ "imp",	{ arg_type::V }, &vm::imp },
+			{ "ims",	{ arg_type::V }, &vm::ims },
+			{ "imb",	{ arg_type::I_MI, arg_type::I }, &vm::imb },
+			{ "ikp",	{ arg_type::I_MI, arg_type::I }, &vm::ikp },
+			{ "ikd",	{ arg_type::I_MI, arg_type::I_MI, arg_type::I }, &vm::ikd },
+			// engine.obj
+			{ "ogp",	{ arg_type::V }, &vm::ogp },
+			{ "osp",	{ arg_type::V }, &vm::osp },
+			{ "ogv",	{ arg_type::V }, &vm::ogv },
+			{ "osv",	{ arg_type::V }, &vm::osv },
+			{ "ogd",	{ arg_type::V }, &vm::ogd },
+			{ "ogs",	{ arg_type::F }, &vm::ogs },
+			{ "oss",	{ arg_type::I_MI_MS }, &vm::oss },
+			{ "spn",	{ arg_type::I_MI_MS, arg_type::I }, &vm::spn }
 		};
 	};
 }

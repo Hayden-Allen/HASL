@@ -38,7 +38,8 @@ namespace hasl::sasm
 			{
 				m_line++;
 
-				if (string_trim(line).empty())
+				line = string_trim(line);
+				if (line.empty())
 					continue;
 
 				parse_line(line);
@@ -134,6 +135,8 @@ namespace hasl::sasm
 			// check that correct number of args were given
 			const auto& expected = desc->second.args;
 			std::vector<std::string> list = string_split(arglist, hasl::c::list_separator_token);
+			// remove empty args
+			list.erase(std::remove_if(list.begin(), list.end(), [](const std::string& s) { return string_trim(s).size() == 0; }), list.end());
 			if (list.size() != expected.size())
 			{
 				err(m_line, "Instruction '%s' expects %zu arguments but %zu were given", desc->first.c_str(), expected.size(), list.size());

@@ -182,6 +182,8 @@
     <ClInclude Include="src\sasm\command.h" />
     <ClInclude Include="src\sasm\registers.h" />
     <ClInclude Include="src\sasm\script.h" />
+    <ClInclude Include="src\sasm\scriptable.h" />
+    <ClInclude Include="src\sasm\script_runtime.h" />
     <ClInclude Include="src\sasm\vm.h" />
     <ClInclude Include="src\util\functions.h" />
     <ClInclude Include="src\util\vec.h" />
