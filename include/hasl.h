@@ -13,5 +13,3 @@
 #include "src/sasm/script_runtime.h"
 #include "src/sasm/scriptable.h"
 #include "src/sasm/vm.h"
-
-// test
