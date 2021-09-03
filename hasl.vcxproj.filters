@@ -1,66 +1,57 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="Source Files">
-      <UniqueIdentifier>{4FC737F1-C7A5-4376-A066-2A32D752A2FF}</UniqueIdentifier>
-      <Extensions>cpp;c;cc;cxx;c++;cppm;ixx;def;odl;idl;hpj;bat;asm;asmx</Extensions>
+    <Filter Include="src">
+      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Header Files">
-      <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;h++;hm;inl;inc;ipp;xsd</Extensions>
+    <Filter Include="src\sasm">
+      <UniqueIdentifier>{70EA36CF-5CB7-91DA-85D0-7F8271FCC668}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files">
-      <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
-      <Extensions>rc;ico;cur;bmp;dlg;rc2;rct;bin;rgs;gif;jpg;jpeg;jpe;resx;tiff;tif;png;wav;mfcribbon-ms</Extensions>
+    <Filter Include="src\util">
+      <UniqueIdentifier>{BA5238CF-A61F-93DA-CF38-8182BB64C868}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\pch.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="include\hasl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\src\sasm\command.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\pch.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\hasl.h" />
+    <ClInclude Include="include\pch.h" />
+    <ClInclude Include="include\src\constants.h">
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="include\src\core.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\src\sasm\constants.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\src\util\vec.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\src\sasm\registers.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\src\sasm\script.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="include\src\sasm\vm.h">
-      <Filter>Header Files</Filter>
+      <Filter>src</Filter>
     </ClInclude>
     <ClInclude Include="include\src\sasm\assembler.h">
-      <Filter>Header Files</Filter>
+      <Filter>src\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\util\functions.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\src\sasm\command.h">
+      <Filter>src\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\constants.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\src\sasm\constants.h">
+      <Filter>src\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\scriptable.h">
-      <Filter>Header Files</Filter>
+    <ClInclude Include="include\src\sasm\registers.h">
+      <Filter>src\sasm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\src\sasm\script.h">
+      <Filter>src\sasm</Filter>
     </ClInclude>
     <ClInclude Include="include\src\sasm\script_runtime.h">
-      <Filter>Header Files</Filter>
+      <Filter>src\sasm</Filter>
     </ClInclude>
+    <ClInclude Include="include\src\sasm\scriptable.h">
+      <Filter>src\sasm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\src\sasm\vm.h">
+      <Filter>src\sasm</Filter>
+    </ClInclude>
+    <ClInclude Include="include\src\util\functions.h">
+      <Filter>src\util</Filter>
+    </ClInclude>
+    <ClInclude Include="include\src\util\vec.h">
+      <Filter>src\util</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="include\pch.cpp" />
   </ItemGroup>
 </Project>
