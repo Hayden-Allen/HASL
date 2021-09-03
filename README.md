@@ -1,2 +1,2 @@
 # hasl
-Hayden Allen Scripting Library
+Hayden Allen Scripting Library. Pronounced "hassle".
