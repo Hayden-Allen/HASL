@@ -3,6 +3,7 @@ project "hasl"
 	language "C++"
 	cppdialect "C++latest"
 	staticruntime "on"
+	flags "MultiProcessorCompile"
 
 	targetdir("bin/" .. outputdir)
 	objdir("bin-int/" .. outputdir)
