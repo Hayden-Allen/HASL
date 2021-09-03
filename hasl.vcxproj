@@ -28,26 +28,26 @@
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>Unicode</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
-    <ConfigurationType>Application</ConfigurationType>
+    <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
     <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
@@ -164,8 +164,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="main.cpp" />
-    <ClCompile Include="pch.cpp">
+    <ClCompile Include="include\pch.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
@@ -173,23 +172,20 @@
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="hasl.h" />
-    <ClInclude Include="pch.h" />
-    <ClInclude Include="src\constants.h" />
-    <ClInclude Include="src\sasm\constants.h" />
-    <ClInclude Include="src\core.h" />
-    <ClInclude Include="src\sasm\assembler.h" />
-    <ClInclude Include="src\sasm\command.h" />
-    <ClInclude Include="src\sasm\registers.h" />
-    <ClInclude Include="src\sasm\script.h" />
-    <ClInclude Include="src\sasm\scriptable.h" />
-    <ClInclude Include="src\sasm\script_runtime.h" />
-    <ClInclude Include="src\sasm\vm.h" />
-    <ClInclude Include="src\util\functions.h" />
-    <ClInclude Include="src\util\vec.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="res\test.sasm" />
+    <ClInclude Include="include\hasl.h" />
+    <ClInclude Include="include\pch.h" />
+    <ClInclude Include="include\src\constants.h" />
+    <ClInclude Include="include\src\sasm\constants.h" />
+    <ClInclude Include="include\src\core.h" />
+    <ClInclude Include="include\src\sasm\assembler.h" />
+    <ClInclude Include="include\src\sasm\command.h" />
+    <ClInclude Include="include\src\sasm\registers.h" />
+    <ClInclude Include="include\src\sasm\script.h" />
+    <ClInclude Include="include\src\sasm\scriptable.h" />
+    <ClInclude Include="include\src\sasm\script_runtime.h" />
+    <ClInclude Include="include\src\sasm\vm.h" />
+    <ClInclude Include="include\src\util\functions.h" />
+    <ClInclude Include="include\src\util\vec.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -1,6 +1,6 @@
 #pragma once
 #include "pch.h"
-#include "util/vec.h"
+#include "src/util/vec.h"
 
 namespace hasl::sasm
 {
