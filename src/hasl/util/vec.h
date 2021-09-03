@@ -1,7 +1,7 @@
 #pragma once
 #include "pch.h"
 #include "functions.h"
-#include "src/core.h"
+#include "hasl/core.h"
 
 namespace hasl
 {

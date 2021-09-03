@@ -82,6 +82,7 @@
       <RuntimeLibrary>MultiThreadedDebug</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>src/;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -101,6 +102,7 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>src/;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -118,29 +120,30 @@
       <RuntimeLibrary>MultiThreaded</RuntimeLibrary>
       <MultiProcessorCompilation>true</MultiProcessorCompilation>
       <LanguageStandard>stdcpplatest</LanguageStandard>
+      <AdditionalIncludeDirectories>src/;</AdditionalIncludeDirectories>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClInclude Include="include\hasl.h" />
-    <ClInclude Include="include\pch.h" />
-    <ClInclude Include="include\src\constants.h" />
-    <ClInclude Include="include\src\core.h" />
-    <ClInclude Include="include\src\sasm\assembler.h" />
-    <ClInclude Include="include\src\sasm\command.h" />
-    <ClInclude Include="include\src\sasm\constants.h" />
-    <ClInclude Include="include\src\sasm\registers.h" />
-    <ClInclude Include="include\src\sasm\script.h" />
-    <ClInclude Include="include\src\sasm\script_runtime.h" />
-    <ClInclude Include="include\src\sasm\scriptable.h" />
-    <ClInclude Include="include\src\sasm\vm.h" />
-    <ClInclude Include="include\src\util\functions.h" />
-    <ClInclude Include="include\src\util\vec.h" />
+    <ClInclude Include="src\hasl.h" />
+    <ClInclude Include="src\hasl\constants.h" />
+    <ClInclude Include="src\hasl\core.h" />
+    <ClInclude Include="src\hasl\sasm\assembler.h" />
+    <ClInclude Include="src\hasl\sasm\command.h" />
+    <ClInclude Include="src\hasl\sasm\constants.h" />
+    <ClInclude Include="src\hasl\sasm\registers.h" />
+    <ClInclude Include="src\hasl\sasm\script.h" />
+    <ClInclude Include="src\hasl\sasm\script_runtime.h" />
+    <ClInclude Include="src\hasl\sasm\scriptable.h" />
+    <ClInclude Include="src\hasl\sasm\vm.h" />
+    <ClInclude Include="src\hasl\util\functions.h" />
+    <ClInclude Include="src\hasl\util\vec.h" />
+    <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\pch.cpp">
+    <ClCompile Include="src\pch.cpp">
       <PrecompiledHeader>Create</PrecompiledHeader>
     </ClCompile>
   </ItemGroup>

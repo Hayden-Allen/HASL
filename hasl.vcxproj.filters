@@ -1,57 +1,57 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="src">
-      <UniqueIdentifier>{2DAB880B-99B4-887C-2230-9F7C8E38947C}</UniqueIdentifier>
+    <Filter Include="hasl">
+      <UniqueIdentifier>{CDC2977C-B9F9-980D-62E6-7E104EFC140F}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\sasm">
-      <UniqueIdentifier>{70EA36CF-5CB7-91DA-85D0-7F8271FCC668}</UniqueIdentifier>
+    <Filter Include="hasl\sasm">
+      <UniqueIdentifier>{10C6855D-7C30-3AD4-C56E-EB7931181829}</UniqueIdentifier>
     </Filter>
-    <Filter Include="src\util">
-      <UniqueIdentifier>{BA5238CF-A61F-93DA-CF38-8182BB64C868}</UniqueIdentifier>
+    <Filter Include="hasl\util">
+      <UniqueIdentifier>{5A2E875D-C698-3BD4-0FD7-EC797B801929}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="include\hasl.h" />
-    <ClInclude Include="include\pch.h" />
-    <ClInclude Include="include\src\constants.h">
-      <Filter>src</Filter>
+    <ClInclude Include="src\hasl.h" />
+    <ClInclude Include="src\hasl\constants.h">
+      <Filter>hasl</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\core.h">
-      <Filter>src</Filter>
+    <ClInclude Include="src\hasl\core.h">
+      <Filter>hasl</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\assembler.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\assembler.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\command.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\command.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\constants.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\constants.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\registers.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\registers.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\script.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\script.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\script_runtime.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\script_runtime.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\scriptable.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\scriptable.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\sasm\vm.h">
-      <Filter>src\sasm</Filter>
+    <ClInclude Include="src\hasl\sasm\vm.h">
+      <Filter>hasl\sasm</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\util\functions.h">
-      <Filter>src\util</Filter>
+    <ClInclude Include="src\hasl\util\functions.h">
+      <Filter>hasl\util</Filter>
     </ClInclude>
-    <ClInclude Include="include\src\util\vec.h">
-      <Filter>src\util</Filter>
+    <ClInclude Include="src\hasl\util\vec.h">
+      <Filter>hasl\util</Filter>
     </ClInclude>
+    <ClInclude Include="src\pch.h" />
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="include\pch.cpp" />
+    <ClCompile Include="src\pch.cpp" />
   </ItemGroup>
 </Project>

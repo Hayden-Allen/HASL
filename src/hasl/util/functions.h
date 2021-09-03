@@ -1,7 +1,5 @@
 #pragma once
 #include "pch.h"
-#include <numbers>
-#include <thread>
 
 namespace hasl
 {

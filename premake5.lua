@@ -9,12 +9,12 @@ project "hasl"
 	objdir("bin-int/" .. outputdir)
 	
 	pchheader "pch.h"
-	pchsource "include/pch.cpp"
+	pchsource "src/pch.cpp"
 
 	files
 	{
-		"include/**.h",
-		"include/**.cpp"
+		"src/**.h",
+		"src/**.cpp"
 	}
 
 	filter "system:windows"
