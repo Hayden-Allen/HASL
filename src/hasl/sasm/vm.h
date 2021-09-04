@@ -38,40 +38,6 @@ namespace hasl::sasm
 		}
 		HASL_DCM(vm);
 	public:
-		i_t run(script<STACK, RAM>& s, script_runtime& rt)
-		{
-			if (!s.m_assembled)
-			{
-				HASL_ASSERT(false, "Cannot run a script that failed to compile");
-				return 0;
-			}
-
-			// script is still sleeping
-			if (rt.current_time < s.m_sleep_end)
-				return 0;
-
-			// restart from entry point unless sleeping
-			if (!s.m_sleeping)
-				m_pc = s.m_entry_point;
-
-			s.m_sleeping = false;
-			s.m_abort = false;
-			m_regs.i[c::reg_hst] = c::host_index;
-			m_regs.i[c::reg_oc] = rt.env.size();
-			m_regs.i[c::reg_flag] = 0;
-
-			while (!s.m_abort && m_pc < s.m_instructions.size())
-			{
-				const args& cur = s.m_instructions[m_pc];
-				(this->*(s_operations[cur.opcode]))(&s, cur, rt.current_time, rt.delta_time, rt.host, rt.env);
-				m_pc++;
-			}
-
-			process_spawn_queue(rt);
-			m_spawn_queue.clear();
-
-			return m_regs.i[c::reg_flag];
-		}
 		void mem_dump(const mem_dump_options& options = {}) const
 		{
 			printf("\n\n====================\n= HASL VM MEM DUMP =\n====================\n\n");
@@ -122,6 +88,40 @@ namespace hasl::sasm
 		virtual bool is_mouse_pressed(i_t button) const = 0;
 		virtual v_t get_mouse_pos() const = 0;
 		virtual v_t get_mouse_scroll() const = 0;
+		i_t run(script<STACK, RAM>& s, script_runtime& rt)
+		{
+			if (!s.m_assembled)
+			{
+				HASL_ASSERT(false, "Cannot run a script that failed to compile");
+				return 0;
+			}
+
+			// script is still sleeping
+			if (rt.current_time < s.m_sleep_end)
+				return 0;
+
+			// restart from entry point unless sleeping
+			if (!s.m_sleeping)
+				m_pc = s.m_entry_point;
+
+			s.m_sleeping = false;
+			s.m_abort = false;
+			m_regs.i[c::reg_hst] = c::host_index;
+			m_regs.i[c::reg_oc] = rt.env.size();
+			m_regs.i[c::reg_flag] = 0;
+
+			while (!s.m_abort && m_pc < s.m_instructions.size())
+			{
+				const args& cur = s.m_instructions[m_pc];
+				(this->*(s_operations[cur.opcode]))(&s, cur, rt.current_time, rt.delta_time, rt.host, rt.env);
+				m_pc++;
+			}
+
+			process_spawn_queue(rt);
+			m_spawn_queue.clear();
+
+			return m_regs.i[c::reg_flag];
+		}
 	private:
 		i_t* const get_int_reg(size_t i)
 		{

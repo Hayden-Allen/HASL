@@ -220,3 +220,8 @@ namespace hasl
 		return { t / v.x, t / v.y };
 	}
 }
+
+namespace hasl::sasm
+{
+	typedef vec<float> v_t;
+}

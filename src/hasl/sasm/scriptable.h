@@ -6,12 +6,6 @@ namespace hasl::sasm
 	class scriptable
 	{
 	public:
-		scriptable(const std::unordered_map<std::string, void*>& states, const std::string& state) :
-			m_states(states),
-			m_state(state)
-		{
-			validate();
-		}
 		HASL_DCM(scriptable);
 	public:
 		virtual v_t get_dims() const = 0;
@@ -45,6 +39,13 @@ namespace hasl::sasm
 		std::string m_state;
 		v_t m_pos, m_vel;
 		float m_speed;
+	protected:
+		scriptable(const std::unordered_map<std::string, void*>& states, const std::string& state) :
+			m_states(states),
+			m_state(state)
+		{
+			validate();
+		}
 	protected:
 		template<typename T>
 		const T* const get_state() const

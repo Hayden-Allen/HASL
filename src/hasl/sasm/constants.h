@@ -1,13 +1,10 @@
 #pragma once
-#include "pch.h"
-#include "hasl/util/vec.h"
 
 namespace hasl::sasm
 {
 	// each is 8 bytes
 	typedef int64_t i_t;
 	typedef double f_t;
-	typedef vec<float> v_t;
 
 
 	namespace c
