@@ -79,6 +79,13 @@ namespace hasl::sasm
 		script<STACK, RAM>* m_script;
 		vm<STACK, RAM>* m_vm;
 	private:
+		bool next_line(std::string* const line)
+		{
+			if (m_file.eof())
+				return false;
+			getline(m_file, *line);
+			return true;
+		}
 		void parse_line(std::string& line)
 		{
 			// separate line into instruction and arguments
@@ -97,7 +104,11 @@ namespace hasl::sasm
 				parse_label(command, args);
 			// this line is an instruction
 			else
-				m_script->m_instructions.emplace_back(create(command, args));
+			{
+				const auto& result = create(command, args);
+				m_script->m_instructions.emplace_back(result.first);
+				m_script->m_byte_code.emplace_back(result.second);
+			}
 		}
 		void parse_label(const std::string& cmd, const std::string& args)
 		{
@@ -120,15 +131,16 @@ namespace hasl::sasm
 			// add the label
 			m_labels.emplace(label, m_script->m_instructions.size());
 		}
-		args create(const std::string& command, const std::string& arglist)
+		std::pair<args, uint64_t> create(const std::string& command, const std::string& arglist)
 		{
 			// get info about the given command
+			uint64_t bytes = 0;
 			args args;
 			const auto& desc = vm<STACK, RAM>::s_command_descriptions.find(command);
 			if (desc == vm<STACK, RAM>::s_command_descriptions.end())
 			{
 				err(m_line, "Invalid command '%s'", command.c_str());
-				return args;
+				return { args, bytes };
 			}
 			args.opcode = desc->second.opcode;
 
@@ -140,7 +152,7 @@ namespace hasl::sasm
 			if (list.size() != expected.size())
 			{
 				err(m_line, "Instruction '%s' expects %zu arguments but %zu were given", desc->first.c_str(), expected.size(), list.size());
-				return args;
+				return { args, bytes };
 			}
 
 			// parse each argument
@@ -152,7 +164,7 @@ namespace hasl::sasm
 				if (!(expected[i] & cur))
 				{
 					err(m_line, "Invalid argument %u for instruction '%s'", i, desc->first.c_str());
-					return args;
+					return { args, bytes };
 				}
 
 				// this argument is a label reference, which must be resolved at the end
@@ -167,7 +179,12 @@ namespace hasl::sasm
 				{
 					// int immediate
 					if (!result.second)
+					{
+						if(cur == arg_type::MIS && (result.first <= c::small_int_min || result.first >= c::small_int_max))
+							err(m_line, "Invalid 16-bit integer literal %d (must be in [%d, %d])", c::small_int_min, c::small_int_max);
+						
 						args.ii[imm_count++] = result.first;
+					}
 					// float immediate
 					else
 						args.fi = HASL_PUN(f_t, result.first);
@@ -184,7 +201,7 @@ namespace hasl::sasm
 				}
 			}
 
-			return args;
+			return { args, bytes };
 		}
 		arg_type get_arg_type(const std::string& arg)
 		{
@@ -232,13 +249,6 @@ namespace hasl::sasm
 		get_arg_type_end:
 			err(m_line, "Invalid argument '%s'", arg.c_str());
 			return arg_type::NONE;
-		}
-		bool next_line(std::string* const line)
-		{
-			if (m_file.eof())
-				return false;
-			getline(m_file, *line);
-			return true;
 		}
 		std::pair<i_t, bool> resolve_int(const std::string& arg)
 		{

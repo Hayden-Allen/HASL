@@ -23,6 +23,8 @@ namespace hasl::sasm
 		constexpr static size_t first_vec_reg = last_float_reg + 1, last_vec_reg = first_vec_reg + vec_reg_count - 1;
 		// upper and lower 32 bits
 		constexpr static int64_t reg_hi_mask = 0xffffffff00000000, reg_lo_mask = 0xffffffff;
+		constexpr static size_t small_int_min = std::numeric_limits<int16_t>::min();
+		constexpr static size_t small_int_max = std::numeric_limits<int16_t>::max();
 
 
 		// special register indices

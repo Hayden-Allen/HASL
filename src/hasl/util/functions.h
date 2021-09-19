@@ -81,4 +81,13 @@ namespace hasl
 	{
 		std::this_thread::sleep_for(std::chrono::milliseconds(ms));
 	}
+	static void write_ulong(std::ofstream& out, uint64_t i)
+	{
+		uint64_t mask = 0xff00000000000000;
+		while (mask)
+		{
+			out.put(i & mask);
+			mask >>= sizeof(char) * 8;
+		}
+	}
 }

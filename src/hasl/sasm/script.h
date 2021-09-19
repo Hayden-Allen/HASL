@@ -26,11 +26,18 @@ namespace hasl::sasm
 			m_assembled = assembler<STACK, RAM>(fp, this, vm).assemble();
 		}
 		HASL_DCM(script);
+	public:
+		void serialize(std::ofstream& out)
+		{
+			for (const auto& i : m_byte_code)
+				write_ulong(out, i);
+		}
 	private:
 		bool m_assembled, m_abort, m_sleeping;
 		size_t m_entry_point;
 		float m_sleep_end;
 		std::string m_filepath;
+		std::vector<uint64_t> m_byte_code;
 		// resolved commands (do this ahead of time so they don't have to be created from the byte code each time a command is run).
 		std::vector<args> m_instructions;
 	};

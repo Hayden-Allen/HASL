@@ -635,7 +635,7 @@ namespace hasl::sasm
 			{ "ims",	{ arg_type::V }, &vm::ims },
 			{ "imb",	{ arg_type::I_MI, arg_type::I }, &vm::imb },
 			{ "ikp",	{ arg_type::I_MI, arg_type::I }, &vm::ikp },
-			{ "ikd",	{ arg_type::I_MI, arg_type::I_MI, arg_type::I }, &vm::ikd },
+			{ "ikd",	{ arg_type::I_MIS, arg_type::I_MIS, arg_type::I }, &vm::ikd },
 			// engine.obj
 			{ "ogp",	{ arg_type::V }, &vm::ogp },
 			{ "osp",	{ arg_type::V }, &vm::osp },
