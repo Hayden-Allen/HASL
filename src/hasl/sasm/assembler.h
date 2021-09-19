@@ -244,7 +244,12 @@ namespace hasl::sasm
 				return arg_type::MF;
 			// int immediate
 			if (isdigit(arg[0]) || arg[0] == '-')
+			{
+				int64_t i = parse_int(arg);
+				if (i >= c::small_int_min && i <= c::small_int_max)
+					return arg_type::MI | arg_type::MIS;
 				return arg_type::MI;
+			}
 
 		get_arg_type_end:
 			err(m_line, "Invalid argument '%s'", arg.c_str());
@@ -290,13 +295,17 @@ namespace hasl::sasm
 				return { HASL_PUN(int64_t, d), true };
 			}
 
+			return { parse_int(arg), false };
+		}
+		int64_t parse_int(const std::string& arg)
+		{
 			// support bin, dec, and hex
 			int base = 10;
 			if (arg.find("0x") == 0)
 				base = 16;
 			if (arg.find("0b") == 0)
 				base = 2;
-			return { std::stoll((base != 10 ? arg.substr(2) : arg), nullptr, base), false };
+			return std::stoll((base != 10 ? arg.substr(2) : arg), nullptr, base);
 		}
 		template<typename ... ARGS>
 		void err(size_t line, const char* fmt, const ARGS& ... args)

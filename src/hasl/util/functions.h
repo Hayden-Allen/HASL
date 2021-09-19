@@ -83,11 +83,10 @@ namespace hasl
 	}
 	static void write_ulong(std::ofstream& out, uint64_t i)
 	{
-		uint64_t mask = 0xff00000000000000;
-		while (mask)
+		for (int i = 8; i >= 0; i--)
 		{
-			out.put(i & mask);
-			mask >>= sizeof(char) * 8;
+			uint64_t mask = HASL_CAST(uint64_t, 0xff) << (HASL_CAST(uint64_t, i) * 8);
+			out << HASL_CAST(uint8_t, (i & mask) >> i * 8);
 		}
 	}
 }

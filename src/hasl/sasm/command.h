@@ -25,17 +25,25 @@ namespace hasl::sasm
 		I_F_V_MF = I | F | V | MF,
 		I_F_V_MI_MF = I | F | V | MI | MF
 	};
-	static bool operator&(arg_type a, arg_type b)
+	static bool operator!(arg_type a)
 	{
-		return HASL_CAST(uint32_t, a) & HASL_CAST(uint32_t, b);
+		return a == arg_type::NONE;
+	}
+	static arg_type operator|(arg_type a, arg_type b)
+	{
+		return HASL_CAST(arg_type, HASL_CAST(uint32_t, a) | HASL_CAST(uint32_t, b));
+	}
+	static arg_type operator&(arg_type a, arg_type b)
+	{
+		return HASL_CAST(arg_type, HASL_CAST(uint32_t, a) & HASL_CAST(uint32_t, b));
 	}
 	static bool is_int_immediate(arg_type a)
 	{
-		return a == arg_type::MI || a == arg_type::MS || a == arg_type::MIS;
+		return (a & arg_type::MI) != arg_type::NONE || (a & arg_type::MS) != arg_type::NONE || (a & arg_type::MIS) != arg_type::NONE;
 	}
 	static bool is_immediate(arg_type a)
 	{
-		return is_int_immediate(a) || a == arg_type::MF;
+		return is_int_immediate(a) || (a & arg_type::MF) != arg_type::NONE;
 	}
 
 
