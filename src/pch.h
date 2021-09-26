@@ -5,6 +5,7 @@
 #include <fstream>
 #include <numbers>
 #include <thread>
+#include <functional>
 
 #include "hasl/core.h"
 

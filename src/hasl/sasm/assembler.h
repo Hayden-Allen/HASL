@@ -79,6 +79,63 @@ namespace hasl::sasm
 		script<STACK, RAM>* m_script;
 		vm<STACK, RAM>* m_vm;
 	private:
+		struct reg_indices
+		{
+			size_t i[3] = { 0 };
+		};
+	private:
+		static uint64_t serialize_args(const args& a, const reg_indices& r)
+		{
+			return s_serialization_functions[s_instruction_groups[a.opcode]](a, r);
+		}
+		static uint64_t serialize_base(const args& a)
+		{
+			return HASL_CAST(uint64_t, a.opcode) << 56;
+		}
+		// 7: opcode
+		// 6: src reg 1
+		// 5: dst reg
+		// 4: flags for 3-0
+		//	1 if int reg
+		//	2 if float reg
+		//	3 if vec reg
+		//  4 if float immediate
+		//  5 if int immediate
+		// 3-0: src reg 2 / immediate
+		static uint64_t serialize23r1i(const args& a, const reg_indices& r, bool float_immediate)
+		{
+			uint64_t i = serialize_base(a);
+			if (a.i[0])
+				i |= 0x40000000000000 | (r.i[0] << 48);
+			else if (a.f[0])
+				i |= 0x80000000000000 | (r.i[0] << 48);
+			else if (a.v[0])
+				i |= 0xc0000000000000 | (r.i[0] << 48);
+
+			if (a.i[2])
+				i |= 0x400000000000 | (r.i[2] << 40);
+			else if (a.f[2])
+				i |= 0x800000000000 | (r.i[2] << 40);
+			else if (a.v[2])
+				i |= 0xc00000000000 | (r.i[2] << 40);
+
+			if (a.i[1])
+				i |= 0x100000000 | r.i[1];
+			else if (a.f[1])
+				i |= 0x200000000 | r.i[1];
+			else if (a.v[1])
+				i |= 0x300000000 | r.i[1];
+			else
+			{
+				if (float_immediate)
+					i |= 0x400000000 | HASL_PUN(uint64_t, a.f);
+				else
+					i |= 0x500000000 | a.ii[0];
+			}
+
+			return i;
+		}
+	private:
 		bool next_line(std::string* const line)
 		{
 			if (m_file.eof())
@@ -104,11 +161,7 @@ namespace hasl::sasm
 				parse_label(command, args);
 			// this line is an instruction
 			else
-			{
-				const auto& result = create(command, args);
-				m_script->m_instructions.emplace_back(result.first);
-				m_script->m_byte_code.emplace_back(result.second);
-			}
+				create(command, args);
 		}
 		void parse_label(const std::string& cmd, const std::string& args)
 		{
@@ -131,16 +184,15 @@ namespace hasl::sasm
 			// add the label
 			m_labels.emplace(label, m_script->m_instructions.size());
 		}
-		std::pair<args, uint64_t> create(const std::string& command, const std::string& arglist)
+		void create(const std::string& command, const std::string& arglist)
 		{
 			// get info about the given command
-			uint64_t bytes = 0;
 			args args;
 			const auto& desc = vm<STACK, RAM>::s_command_descriptions.find(command);
 			if (desc == vm<STACK, RAM>::s_command_descriptions.end())
 			{
 				err(m_line, "Invalid command '%s'", command.c_str());
-				return { args, bytes };
+				return;
 			}
 			args.opcode = desc->second.opcode;
 
@@ -152,11 +204,12 @@ namespace hasl::sasm
 			if (list.size() != expected.size())
 			{
 				err(m_line, "Instruction '%s' expects %zu arguments but %zu were given", desc->first.c_str(), expected.size(), list.size());
-				return { args, bytes };
+				return;
 			}
 
 			// parse each argument
 			size_t imm_count = 0;
+			reg_indices regs;
 			for (size_t i = 0; i < list.size(); i++)
 			{
 				// check that current arg matches the expected type
@@ -164,7 +217,7 @@ namespace hasl::sasm
 				if (!(expected[i] & cur))
 				{
 					err(m_line, "Invalid argument %u for instruction '%s'", i, desc->first.c_str());
-					return { args, bytes };
+					return;
 				}
 
 				// this argument is a label reference, which must be resolved at the end
@@ -192,6 +245,7 @@ namespace hasl::sasm
 				// this argument is a register
 				else
 				{
+					regs.i[i] = result.first;
 					if (cur == arg_type::I)
 						args.i[i] = m_vm->get_int_reg(result.first);
 					else if (cur == arg_type::F)
@@ -201,7 +255,8 @@ namespace hasl::sasm
 				}
 			}
 
-			return { args, bytes };
+			m_script->m_instructions.emplace_back(args);
+			m_script->m_byte_code.emplace_back(serialize_args(args, regs));
 		}
 		arg_type get_arg_type(const std::string& arg)
 		{
@@ -315,5 +370,98 @@ namespace hasl::sasm
 			printf(buf, args...);
 			m_abort = true;
 		}
+	private:
+		constexpr static size_t s_instruction_groups[] =
+		{
+			// math
+			0, 1, 2, 0, 1, 2, 0, 1, 2, 0, 1, 2,
+			// bit
+			0, 0, 0, 0, 3, 0, 0,
+			// trig
+			4, 4, 4, 4, 4, 4,
+			// fn
+			0, 0, 1, 1, 5, 5, 1, 6, 3, 6, 7, 0, 1, 3, 6, 7,
+			// vec
+			8, 5, 5, 8, 7,
+			// mem
+			9, 9, 10, 3, 3, 11, 12, 12, 12, 13, 14,
+			// ctrl
+			15, 16, 15, 17, 17, 17, 17, 18, 18, 26, 26, 19, 19,
+			// debug
+			19, 20, 21, 22,
+			// engine
+			23,
+			// input
+			21, 21, 3, 3, 24,
+			// obj
+			21, 21, 21, 21 ,21, 23, 22, 25
+		};
+		const static inline std::vector<std::function<uint64_t(const args&, const reg_indices&)>> s_serialization_functions =
+		{
+			// I, I_MI, I
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// F, F_MF, F
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, true); },
+			// V, F_V_MF
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, true); },
+			// I_MI, I
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// F, F
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+
+			// V, F
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// F_MF, F
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// V, V
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// V, V, F
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+
+			// I_F_V
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_F_MI, I
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_F_MF, F
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, true); },
+			// I_F_V, I_MI
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_MI, I_F_V
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+
+
+			
+			// I_F_V, I_F_V, L_MI
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_F_V, L_MI
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_F, I_F, L_MI
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// L_MI
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_MI
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+
+
+
+			// F_MF
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, true); },
+			// V
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_MI_MS
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// F
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+			// I_MIS, I_MIS, I
+			[](const args& a, const reg_indices& r)
+			{
+				uint64_t i = serialize_base(a);
+				// TODO
+				return i;
+			},
+
+			// I_MI_MS, I
+			[](const args& a, const reg_indices& r) { return serialize23r1i(a, r, false); },
+		};
 	};
 }

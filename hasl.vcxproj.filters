@@ -50,6 +50,7 @@
       <Filter>hasl\util</Filter>
     </ClInclude>
     <ClInclude Include="src\pch.h" />
+    <ClInclude Include="src\hasl\sasm\deserialize.h" />
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="src\pch.cpp" />

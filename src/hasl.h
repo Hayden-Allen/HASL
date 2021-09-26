@@ -8,6 +8,7 @@
 #include "hasl/sasm/assembler.h"
 #include "hasl/sasm/command.h"
 #include "hasl/sasm/constants.h"
+#include "hasl/sasm/deserialize.h"
 #include "hasl/sasm/registers.h"
 #include "hasl/sasm/script.h"
 #include "hasl/sasm/script_runtime.h"

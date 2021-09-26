@@ -83,10 +83,25 @@ namespace hasl
 	}
 	static void write_ulong(std::ofstream& out, uint64_t i)
 	{
-		for (int i = 8; i >= 0; i--)
-		{
-			uint64_t mask = HASL_CAST(uint64_t, 0xff) << (HASL_CAST(uint64_t, i) * 8);
-			out << HASL_CAST(uint8_t, (i & mask) >> i * 8);
-		}
+		out.put(HASL_CAST(char, (i & 0xff00000000000000) >> 56));
+		out.put(HASL_CAST(char, (i & 0xff000000000000) >> 48));
+		out.put(HASL_CAST(char, (i & 0xff0000000000) >> 40));
+		out.put(HASL_CAST(char, (i & 0xff00000000) >> 32));
+		out.put(HASL_CAST(char, (i & 0xff000000) >> 24));
+		out.put(HASL_CAST(char, (i & 0xff0000) >> 16));
+		out.put(HASL_CAST(char, (i & 0xff00) >> 8));
+		out.put(HASL_CAST(char, (i & 0xff) >> 0));
+	}
+	static uint64_t read_ulong(std::ifstream& in)
+	{
+		return
+			(HASL_CAST(uint64_t, in.get()) << 56) |
+			(HASL_CAST(uint64_t, in.get()) << 48) |
+			(HASL_CAST(uint64_t, in.get()) << 40) |
+			(HASL_CAST(uint64_t, in.get()) << 32) |
+			(HASL_CAST(uint64_t, in.get()) << 24) |
+			(HASL_CAST(uint64_t, in.get()) << 16) |
+			(HASL_CAST(uint64_t, in.get()) << 8) |
+			(HASL_CAST(uint64_t, in.get()) << 0);
 	}
 }

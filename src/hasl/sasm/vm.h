@@ -17,6 +17,7 @@ namespace hasl::sasm
 	class vm
 	{
 		friend class assembler<STACK, RAM>;
+		friend class serializer;
 	public:
 		vm() :
 			m_stack{ 0 },
@@ -70,6 +71,31 @@ namespace hasl::sasm
 				arrprint(m_stack, "%llu", ", ", 16);
 			if(options.ram)
 				arrprint(m_memory, "%u", ", ", 16);
+		}
+		args deserialize(uint64_t i)
+		{
+			args a = deserialize_base(i);
+
+			printf("%llx\n", i);
+			printf("%u | %llx | %llx\n", a.opcode, (i & 0xff000000000000) >> 48, (i & 0xff0000000000) >> 40);
+			deserialize_reg(a, (i & 0xff000000000000) >> 48, 0);
+			deserialize_reg(a, (i & 0xff0000000000) >> 40, 2);
+
+			uint64_t flags = (i & 0xff00000000) >> 32, reg = i & 0xff, imm = i & 0xffffffff;
+			if (flags == 1)
+				a.i[1] = get_int_reg(reg);
+			else if (flags == 2)
+				a.f[1] = get_float_reg(reg);
+			else if (flags == 3)
+				a.v[1] = get_vec_reg(reg);
+			else if (flags == 4)
+				a.fi = HASL_PUN(float, imm);
+			else if (flags == 5)
+				a.ii[0] = imm;
+			else
+				printf("Invalid second source flags %llx\n", flags);
+
+			return a;
 		}
 	protected:
 		// stack
@@ -135,7 +161,7 @@ namespace hasl::sasm
 		}
 		v_t* const get_vec_reg(size_t i)
 		{
-			HASL_ASSERT(i >= c::first_vec_reg && i <= c::last_vec_reg, "Invalid int register index");
+			HASL_ASSERT(i >= c::first_vec_reg && i <= c::last_vec_reg, "Invalid vec register index");
 			return &m_regs.v[i - c::first_vec_reg];
 		}
 		bool range_check(script<STACK, RAM>* const s, i_t i, i_t min, i_t max)
@@ -166,6 +192,24 @@ namespace hasl::sasm
 				return HASL_CAST(T, 0);
 			}
 			return HASL_PUN(T, m_stack[--m_sp]);
+		}
+		static args deserialize_base(uint64_t i)
+		{
+			args a;
+			a.opcode = (i & 0xff00000000000000) >> 56;
+			return a;
+		}
+		void deserialize_reg(args& a, uint64_t byte, size_t index)
+		{
+			uint64_t flags = (byte & 0xc0), reg = (byte & 0x3f);
+			if (flags == 0x40)
+				a.i[index] = get_int_reg(reg);
+			else if (flags == 0x80)
+				a.f[index] = get_float_reg(reg);
+			else if (flags == 0xc0)
+				a.v[index] = get_vec_reg(reg);
+			else if (flags != 0)
+				printf("Invalid reg %zu type %llx\n", index, flags);
 		}
 	private:
 		// instruction signature
@@ -543,108 +587,110 @@ namespace hasl::sasm
 		{
 			std::string name;
 			std::vector<arg_type> desc;
+			// TODO remove
+			size_t group;
 			operation op;
 		};
 		const static inline std::vector<instruction> s_instructions =
 		{
 			// math
-			{ "add",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::add },
-			{ "addf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::addf },
-			{ "addv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, &vm::addv },
-			{ "sub",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::sub },
-			{ "subf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::subf },
-			{ "subv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, &vm::subv },
-			{ "mul",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::mul },
-			{ "mulf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::mulf },
-			{ "mulv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, &vm::mulv },
-			{ "div",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::div },
-			{ "divf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::divf },
-			{ "divv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, &vm::divv },
+			{ "add",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::add },
+			{ "addf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::addf },
+			{ "addv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, 2, &vm::addv },
+			{ "sub",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::sub },
+			{ "subf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::subf },
+			{ "subv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, 2, &vm::subv },
+			{ "mul",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::mul },
+			{ "mulf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::mulf },
+			{ "mulv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, 2, &vm::mulv },
+			{ "div",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::div },
+			{ "divf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::divf },
+			{ "divv",	{ arg_type::V, arg_type::F_V_MF, arg_type::V }, 2, &vm::divv },
 			// math.bit
-			{ "and",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::band },
-			{ "xor",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::bxor },
-			{ "or",		{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::bor },
-			{ "not",	{ arg_type::I_MI, arg_type::I }, &vm::bnot },
-			{ "sl",		{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::sl },
-			{ "sr",		{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::sr },
+			{ "and",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::band },
+			{ "xor",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::bxor },
+			{ "or",		{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::bor },
+			{ "not",	{ arg_type::I_MI, arg_type::I }, 3, &vm::bnot },
+			{ "sl",		{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::sl },
+			{ "sr",		{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::sr },
 			// math.trig
-			{ "sin",	{ arg_type::F, arg_type::F }, &vm::sine },
-			{ "cos",	{ arg_type::F, arg_type::F }, &vm::cosine },
-			{ "tan",	{ arg_type::F, arg_type::F }, &vm::tangent },
-			{ "asin",	{ arg_type::F, arg_type::F }, &vm::arcsine },
-			{ "acos",	{ arg_type::F, arg_type::F }, &vm::arccosine },
-			{ "atan",	{ arg_type::F, arg_type::F }, &vm::arctangent },
+			{ "sin",	{ arg_type::F, arg_type::F }, 4, &vm::sine },
+			{ "cos",	{ arg_type::F, arg_type::F }, 4, &vm::cosine },
+			{ "tan",	{ arg_type::F, arg_type::F }, 4, &vm::tangent },
+			{ "asin",	{ arg_type::F, arg_type::F }, 4, &vm::arcsine },
+			{ "acos",	{ arg_type::F, arg_type::F }, 4, &vm::arccosine },
+			{ "atan",	{ arg_type::F, arg_type::F }, 4, &vm::arctangent },
 			// math.fn
-			{ "min",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::min },
-			{ "max",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::max },
-			{ "minf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::minf },
-			{ "maxf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::maxf },
-			{ "minv",	{ arg_type::V, arg_type::F }, &vm::minv },
-			{ "maxv",	{ arg_type::V, arg_type::F }, &vm::maxv },
-			{ "pow",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::power },
-			{ "sqrt",	{ arg_type::F_MF, arg_type::F }, &vm::squareroot },
-			{ "abs",	{ arg_type::I_MI, arg_type::I }, &vm::absolute },
-			{ "absf",	{ arg_type::F_MF, arg_type::F }, &vm::absolutef },
-			{ "absv",	{ arg_type::V, arg_type::V }, &vm::absolutev },
-			{ "rand",	{ arg_type::I, arg_type::I_MI, arg_type::I }, &vm::random },
-			{ "randf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, &vm::randomf },
-			{ "sign",	{ arg_type::I_MI, arg_type::I }, &vm::sign },
-			{ "signf",	{ arg_type::F_MF, arg_type::F }, &vm::signf },
-			{ "signv",	{ arg_type::V, arg_type::V }, &vm::signv },
+			{ "min",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::min },
+			{ "max",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::max },
+			{ "minf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::minf },
+			{ "maxf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::maxf },
+			{ "minv",	{ arg_type::V, arg_type::F }, 5, &vm::minv },
+			{ "maxv",	{ arg_type::V, arg_type::F }, 5, &vm::maxv },
+			{ "pow",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::power },
+			{ "sqrt",	{ arg_type::F_MF, arg_type::F }, 6, &vm::squareroot },
+			{ "abs",	{ arg_type::I_MI, arg_type::I }, 3, &vm::absolute },
+			{ "absf",	{ arg_type::F_MF, arg_type::F }, 6, &vm::absolutef },
+			{ "absv",	{ arg_type::V, arg_type::V }, 7, &vm::absolutev },
+			{ "rand",	{ arg_type::I, arg_type::I_MI, arg_type::I }, 0, &vm::random },
+			{ "randf",	{ arg_type::F, arg_type::F_MF, arg_type::F }, 1, &vm::randomf },
+			{ "sign",	{ arg_type::I_MI, arg_type::I }, 3, &vm::sign },
+			{ "signf",	{ arg_type::F_MF, arg_type::F }, 6, &vm::signf },
+			{ "signv",	{ arg_type::V, arg_type::V }, 7, &vm::signv },
 			// math.vec
-			{ "dot",	{ arg_type::V, arg_type::V, arg_type::F }, &vm::dot },
-			{ "mag",	{ arg_type::V, arg_type::F }, &vm::mag },
-			{ "ang",	{ arg_type::V, arg_type::F }, &vm::ang },
-			{ "angv",	{ arg_type::V, arg_type::V, arg_type::F }, &vm::angv },
-			{ "norm",	{ arg_type::V, arg_type::V }, &vm::norm },
+			{ "dot",	{ arg_type::V, arg_type::V, arg_type::F }, 8, &vm::dot },
+			{ "mag",	{ arg_type::V, arg_type::F }, 5, &vm::mag },
+			{ "ang",	{ arg_type::V, arg_type::F }, 5, &vm::ang },
+			{ "angv",	{ arg_type::V, arg_type::V, arg_type::F }, 8, &vm::angv },
+			{ "norm",	{ arg_type::V, arg_type::V }, 7, &vm::norm },
 			// mem
-			{ "psh",	{ arg_type::I_F_V }, &vm::psh },
-			{ "pop",	{ arg_type::I_F_V }, &vm::pop },
-			{ "mov",	{ arg_type::I_F_MI, arg_type::I }, &vm::mov },
-			{ "movl",	{ arg_type::I_MI, arg_type::I }, &vm::movl },
-			{ "movh",	{ arg_type::I_MI, arg_type::I }, &vm::movh },
-			{ "movf",	{ arg_type::I_F_MF, arg_type::F }, &vm::movf },
-			{ "movv",	{ arg_type::I_F_V_MF, arg_type::V }, &vm::movv },
-			{ "movx",	{ arg_type::I_F_V_MF, arg_type::V }, &vm::movx },
-			{ "movy",	{ arg_type::I_F_V_MF, arg_type::V }, &vm::movy },
-			{ "stm",	{ arg_type::I_F_V, arg_type::I_MI }, &vm::stm },
-			{ "ldm",	{ arg_type::I_MI, arg_type::I_F_V }, &vm::ldm },
+			{ "psh",	{ arg_type::I_F_V }, 9, &vm::psh },
+			{ "pop",	{ arg_type::I_F_V }, 9, &vm::pop },
+			{ "mov",	{ arg_type::I_F_MI, arg_type::I }, 10, &vm::mov },
+			{ "movl",	{ arg_type::I_MI, arg_type::I }, 3, &vm::movl },
+			{ "movh",	{ arg_type::I_MI, arg_type::I }, 3, &vm::movh },
+			{ "movf",	{ arg_type::I_F_MF, arg_type::F }, 11, &vm::movf },
+			{ "movv",	{ arg_type::I_F_V_MF, arg_type::V }, 12, &vm::movv },
+			{ "movx",	{ arg_type::I_F_V_MF, arg_type::V }, 12, &vm::movx },
+			{ "movy",	{ arg_type::I_F_V_MF, arg_type::V }, 12, &vm::movy },
+			{ "stm",	{ arg_type::I_F_V, arg_type::I_MI }, 13, &vm::stm },
+			{ "ldm",	{ arg_type::I_MI, arg_type::I_F_V }, 14, &vm::ldm },
 			// ctrl
-			{ "beq",	{ arg_type::I_F_V, arg_type::I_F_V, arg_type::L_MI }, &vm::beq },
-			{ "beqz",	{ arg_type::I_F_V, arg_type::L_MI }, &vm::beqz },
-			{ "bne",	{ arg_type::I_F_V, arg_type::I_F_V, arg_type::L_MI }, &vm::bne },
-			{ "blt",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, &vm::blt },
-			{ "bgt",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, &vm::bgt },
-			{ "ble",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, &vm::ble },
-			{ "bge",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, &vm::bge },
-			{ "j",		{ arg_type::L_MI }, &vm::j },
-			{ "call",	{ arg_type::L_MI }, &vm::call },
-			{ "ret",	{ }, &vm::ret },
-			{ "end",	{ }, &vm::end },
-			{ "slp",	{ arg_type::I_MI }, &vm::slp },
-			{ "blk",	{ arg_type::I_MI }, &vm::blk },
+			{ "beq",	{ arg_type::I_F_V, arg_type::I_F_V, arg_type::L_MI }, 15, &vm::beq },
+			{ "beqz",	{ arg_type::I_F_V, arg_type::L_MI }, 16, &vm::beqz },
+			{ "bne",	{ arg_type::I_F_V, arg_type::I_F_V, arg_type::L_MI }, 15, &vm::bne },
+			{ "blt",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, 17, &vm::blt },
+			{ "bgt",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, 17, &vm::bgt },
+			{ "ble",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, 17, &vm::ble },
+			{ "bge",	{ arg_type::I_F, arg_type::I_F, arg_type::L_MI }, 17, &vm::bge },
+			{ "j",		{ arg_type::L_MI }, 18, &vm::j },
+			{ "call",	{ arg_type::L_MI }, 18, &vm::call },
+			{ "ret",	{ }, 26, &vm::ret },
+			{ "end",	{ }, 26, &vm::end },
+			{ "slp",	{ arg_type::I_MI }, 19, &vm::slp },
+			{ "blk",	{ arg_type::I_MI }, 19, &vm::blk },
 			// debug
-			{ "dbg",	{ arg_type::I_MI }, &vm::dbg },
-			{ "dbgf",	{ arg_type::F_MF }, &vm::dbgf },
-			{ "dbgv",	{ arg_type::V }, &vm::dbgv },
-			{ "dbgs",	{ arg_type::I_MI_MS }, &vm::dbgs },
+			{ "dbg",	{ arg_type::I_MI }, 19, &vm::dbg },
+			{ "dbgf",	{ arg_type::F_MF }, 20, &vm::dbgf },
+			{ "dbgv",	{ arg_type::V }, 21, &vm::dbgv },
+			{ "dbgs",	{ arg_type::I_MI_MS }, 22, &vm::dbgs },
 			// engine
-			{ "time",	{ arg_type::F }, &vm::gettime },
+			{ "time",	{ arg_type::F }, 23, &vm::gettime },
 			// engine.input
-			{ "imp",	{ arg_type::V }, &vm::imp },
-			{ "ims",	{ arg_type::V }, &vm::ims },
-			{ "imb",	{ arg_type::I_MI, arg_type::I }, &vm::imb },
-			{ "ikp",	{ arg_type::I_MI, arg_type::I }, &vm::ikp },
-			{ "ikd",	{ arg_type::I_MIS, arg_type::I_MIS, arg_type::I }, &vm::ikd },
+			{ "imp",	{ arg_type::V }, 21, &vm::imp },
+			{ "ims",	{ arg_type::V }, 21, &vm::ims },
+			{ "imb",	{ arg_type::I_MI, arg_type::I }, 3, &vm::imb },
+			{ "ikp",	{ arg_type::I_MI, arg_type::I }, 3, &vm::ikp },
+			{ "ikd",	{ arg_type::I_MIS, arg_type::I_MIS, arg_type::I }, 24, &vm::ikd },
 			// engine.obj
-			{ "ogp",	{ arg_type::V }, &vm::ogp },
-			{ "osp",	{ arg_type::V }, &vm::osp },
-			{ "ogv",	{ arg_type::V }, &vm::ogv },
-			{ "osv",	{ arg_type::V }, &vm::osv },
-			{ "ogd",	{ arg_type::V }, &vm::ogd },
-			{ "ogs",	{ arg_type::F }, &vm::ogs },
-			{ "oss",	{ arg_type::I_MI_MS }, &vm::oss },
-			{ "spn",	{ arg_type::I_MI_MS, arg_type::I }, &vm::spn }
+			{ "ogp",	{ arg_type::V }, 21, &vm::ogp },
+			{ "osp",	{ arg_type::V }, 21, &vm::osp },
+			{ "ogv",	{ arg_type::V }, 21, &vm::ogv },
+			{ "osv",	{ arg_type::V }, 21, &vm::osv },
+			{ "ogd",	{ arg_type::V }, 21, &vm::ogd },
+			{ "ogs",	{ arg_type::F }, 23, &vm::ogs },
+			{ "oss",	{ arg_type::I_MI_MS }, 22, &vm::oss },
+			{ "spn",	{ arg_type::I_MI_MS, arg_type::I }, 25, &vm::spn }
 		};
 	};
 }
